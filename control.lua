@@ -1,9 +1,12 @@
 local action = {}
 function action.remove_speed(data)
-    local player = game.players[data.player_index]
+    local player, pdata = game.players[data.player_index], global.player_data[data.player_index]
     --Since we added player in a previous tick we need to make sure the player is still valid.
-    if player and player.valid then
-        player.running_speed = .15
+    if player and player.valid and player.character then
+        --change the modifier back only if it hasn't changes since we changed it earlier.
+        local cur_speed = player.character_running_speed_modifier
+        --current issue -----2x modifier won't reset value
+        player.character_running_speed_modifier = data.modifier_new == cur_speed and data.modifier_old or cur_speed
         player.print("the drugs have worn off")
     end
 end
@@ -12,20 +15,26 @@ local function on_trigger_created_entity(event)
     game.print("Fires on any TCE event")
     --Not the recomended way of doing this but we will go with it for testing
     local player = game.players[1]
-    --When does this effect expire
-    local expires = event.tick + 120 --2 seconds from now
-    --What we are changing
-    player.running_speed = .5
-    --Get or create a table of queues at position [expires]
-    global.tick_queue[expires] = global.tick_queue[expires] or {}
-    --Make local refrence to our queue
-    local queue = global.tick_queue[expires]
-    --Insert a new queue into table at expires tick position
-    queue[#queue+1] = {
-        action="remove_speed", --The action we want to do when it expires
-        player_index=player.index, --The player this action affects
-        expires=expires --The tick it expires on
-    }
+    --Only affect players with characters
+    if player and player.character then
+        --Add everything we will need to a data table
+        local data = {}
+        --When does this effect expire
+        data.expires = event.tick + 240 --4 seconds from now
+        --What are we changing
+        data.action = "remove_speed"
+        data.player_index = player.index
+        data.modifier_old = player.character_running_speed_modifier
+        data.modifier_new = player.character_running_speed_modifier + 0.5
+        --Change the current modifier value to the new value
+        player.character_running_speed_modifier = data.modifier_new
+        --Get or create a table of queues at position [expires]
+        global.tick_queue[data.expires] = global.tick_queue[data.expires] or {}
+        --Make local refrence to our queue
+        local queue = global.tick_queue[data.expires]
+        --Insert a new queue into table at expires tick position
+        queue[#queue+1] = data
+    end
 end
 script.on_event(defines.events.on_trigger_created_entity, on_trigger_created_entity)
 
@@ -39,7 +48,7 @@ local function on_tick(event)
             action[ind_queue.action](ind_queue)
         end
         --Delete the queue for this position, it isn't needed anymore
-        global.queue[event.tick]=nil
+        global.tick_queue[event.tick]=nil
     end
 end
 script.on_event(defines.events.on_tick, on_tick)
