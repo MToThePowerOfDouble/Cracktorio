@@ -1,26 +1,45 @@
 local action = {}
 function action.remove_speed(data)
     local player = game.players[data.player_index]
-    player.running_speed = .15
-    game.print("the drugs have worn off")
+    --Since we added player in a previous tick we need to make sure the player is still valid.
+    if player and player.valid then
+        player.running_speed = .15
+        player.print("the drugs have worn off")
+    end
 end
 
 local function on_trigger_created_entity(event)
-    -- will currently fire on any tce event
-    game.print("the trigger is working!")
-    local player = game.players[1]  --for testing.......
-    local expires = event.tick + 120   -- expires 2 seconds from now
+    game.print("Fires on any TCE event")
+    --Not the recomended way of doing this but we will go with it for testing
+    local player = game.players[1]
+    --When does this effect expire
+    local expires = event.tick + 120 --2 seconds from now
+    --What we are changing
     player.running_speed = .5
-    global.tick_queue[expires] = {action="remove_speed", player_index=player.index}
+    --Get or create a table of queues at position [expires]
+    global.tick_queue[expires] = global.tick_queue[expires] or {}
+    --Make local refrence to our queue
+    local queue = global.tick_queue[expires]
+    --Insert a new queue into table at expires tick position
+    queue[#queue+1] = {
+        action="remove_speed", --The action we want to do when it expires
+        player_index=player.index, --The player this action affects
+        expires=expires --The tick it expires on
+    }
 end
 script.on_event(defines.events.on_trigger_created_entity, on_trigger_created_entity)
 
 local function on_tick(event)
-    local queue = global.tick_queue
-    if queue[event.tick] then
-        action[queue[event.tick].action](queue[event.tick])
-        queue[event.tick] = nil
-        --convuletd but it works! :)
+    --Local refrence to to our queue
+    if global.tick_queue[event.tick] then
+        local queue = global.tick_queue[event.tick]
+        --Loop through all items in the queue for this tick
+        for _, ind_queue in pairs(queue) do
+            --Perform the action associated with this, pass the ind_queue as parameter
+            action[ind_queue.action](ind_queue)
+        end
+        --Delete the queue for this position, it isn't needed anymore
+        global.queue[event.tick]=nil
     end
 end
 script.on_event(defines.events.on_tick, on_tick)
