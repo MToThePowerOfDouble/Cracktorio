@@ -9,11 +9,13 @@ function action.remove_speed(data)
     if player and player.valid and player.character then
         --change the modifier back only if it hasn't changes since we changed it earlier.
         local cur_speed = player.character_running_speed_modifier
-        local cur_mining = player.character_mining_speed_modifier
-        --current issue -----2x modifier won't reset value
-        player.character_running_speed_modifier = data.modifier_new == cur_speed and data.modifier_old or cur_speed
-        player.character_mining_speed_modifier = data.mining_new == cur_mining and data.mining_old or cur_mining
-        player.print("the drugs have worn off")
+		local cur_mining = player.character_mining_speed_modifier
+		local cur_health = player.character_health_bonus
+		--current issue -----2x modifier won't reset value
+		player.character_running_speed_modifier = data.modifier_new == cur_speed and data.modifier_old or cur_speed
+		player.character_mining_speed_modifier = data.mining_new == cur_mining and data.mining_old or cur_mining
+		player.chatacter_health_bonus = data.health_new == cur_health and data.health_old or cur_health
+		player.print("the drugs have worn off")
     end
 end
 
@@ -31,12 +33,20 @@ end
 
 function action.teleport(player)
     local data = {}
-    local plx = player.position.x
-    local ply = player.position.y
-    --good and bad, look at surface.find_non_colliding_position
-    local location = {math.random(plx,50),math.random(ply, 50)}
-    player.teleport(location)
-    return data
+	local plx = math.random(player.position.x-25, player.position.y+25)
+	local ply = math.random(player.position.x-25, player.position.y+25)
+	--good and bad, look at surface.find_non_colliding_position
+	player.teleport(player.surface.find_non_colliding_position("player",{plx, ply},10,1))
+	return data
+end
+
+function action.add_100_health(player, tick)
+	local data = {}
+	data.expires = tick + 240
+	data.health_old = player.character_health_bonus
+	data.health_new = player.character_health_bonus + 100
+	player.character_health_bonus = data.health_new
+	return data
 end
 
 function action.mining_speed(player)
@@ -55,8 +65,24 @@ local function on_trigger_created_entity(event)
         if stack_name == "Caffeine-Capsule" then
             data = action.add_speed(player, event.tick)
         elseif stack_name == "Nicotine-Capsule" then
-            data = action.teleport(player)
-        end
+			data = action.teleport(player)
+		elseif stack_name == "Alcohol-Capsule" then
+			data = action.add_speed(player, event.tick)
+		elseif stack_name == "Marijuana-Capsule" then
+			data = action.teleport(player)
+		elseif stack_name == "Cocaine-Capsule" then
+			data = action.add_speed(player, event.tick)
+		elseif stack_name == "Opium-Capsule" then
+			data = action.teleport(player)
+		elseif stack_name == "Heroin-Capsule" then
+			data = action.add_speed(player, event.tick)
+		elseif stack_name == "Methamphetamine-Capsule" then
+			data = action.teleport(player)
+		elseif stack_name == "MDMA-Capsule" then
+			data = action.add_speed(player, event.tick)
+		elseif stack_name == "LSD-Capsule" then
+			data = action.add_speed(player, event.tick)
+		end
         --Only add to queue if it expires.
         if data.expires then
             --Get or create a table of queues at position [expires]
