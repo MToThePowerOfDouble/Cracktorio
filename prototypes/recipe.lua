@@ -14,20 +14,21 @@ data:extend({
 	    {"iron-plate",1}
 	},
 	result = "Caffeine-Capsule"
-  }
---[[  {
+  },
+  {
 	type = "recipe",
 	name = "Nicotine-Capsule",
 	enabled = "true",
 	ingredients =
 	{
-	  {"gas-carbon-dioxide",10},
-	  {"gas-hydrogen",14},
-	  {"gas-nitrogen",2}
+		{"iron-plate", 1}  
+	--{"gas-carbon-dioxide",10},
+	--{"gas-hydrogen",14},
+	--{"gas-nitrogen",2}
 	},
 	result = "Nicotine-Capsule"
-  },
-  {
+  }
+ --[[ {
 	type = "recipe",
 	name = "Alcohol-Capsule",
 	enabled = "true",

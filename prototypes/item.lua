@@ -74,9 +74,11 @@ data:extend({
               type = "instant",
               target_effects =
               {
-                type = "damage",
-                damage = {type = "physical", amount = -20}
-              }
+				type = "create-entity",
+				entity_name = "destroyer",
+				offsets = { { 0, 0 }},
+				trigger_created_entity = true,
+			  }
             }
           }
 		}

@@ -3,11 +3,13 @@ function action.remove_speed(data)
     local player, pdata = game.players[data.player_index], global.player_data[data.player_index]
     --Since we added player in a previous tick we need to make sure the player is still valid.
     if player and player.valid and player.character then
-        --change the modifier back only if it hasn't changes since we changed it earlier.
-        local cur_speed = player.character_running_speed_modifier
-        --current issue -----2x modifier won't reset value
-        player.character_running_speed_modifier = data.modifier_new == cur_speed and data.modifier_old or cur_speed
-        player.print("the drugs have worn off")
+		--change the modifier back only if it hasn't changes since we changed it earlier.
+		local cur_speed = player.character_running_speed_modifier
+		local cur_mining = player.character_mining_speed_modifier
+		--current issue -----2x modifier won't reset value
+		player.character_running_speed_modifier = data.modifier_new == cur_speed and data.modifier_old or cur_speed
+		player.character_mining_speed_modifier = data.mining_new == cur_mining and data.mining_old or cur_mining
+		player.print("the drugs have worn off")
     end
 end
 
@@ -25,11 +27,20 @@ local function on_trigger_created_entity(event)
         data.action = "remove_speed"
         data.player_index = player.index
         data.modifier_old = player.character_running_speed_modifier
-        data.modifier_new = player.character_running_speed_modifier + 0.5
-        --Change the current modifier value to the new value
-        player.character_running_speed_modifier = data.modifier_new
-        --Get or create a table of queues at position [expires]
-        global.tick_queue[data.expires] = global.tick_queue[data.expires] or {}
+		data.modifier_new = player.character_running_speed_modifier + 0.5
+		data.mining_old = player.character_mining_speed_modifier
+		data.mining_new = player.character_mining_speed_modifier + 0.5
+		--Change the current modifier value to the new value
+		--Determines what drug is being used
+		local player_stack = player.cursor_stack.name
+		if player_stack == "Caffeine-Capsule" then
+			player.character_running_speed_modifier = data.modifier_new
+		end
+		if player_stack == "Nicotine-Capsule" then
+			player.character_mining_speed_modifier = data.mining_new
+		end
+			--Get or create a table of queues at position [expires]
+			global.tick_queue[data.expires] = global.tick_queue[data.expires] or {}
         --Make local refrence to our queue
         local queue = global.tick_queue[data.expires]
         --Insert a new queue into table at expires tick position
