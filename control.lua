@@ -37,7 +37,11 @@ local function on_trigger_created_entity(event)
 			player.character_running_speed_modifier = data.modifier_new
 		end
 		if player_stack == "Nicotine-Capsule" then
-			player.character_mining_speed_modifier = data.mining_new
+			--player.character_mining_speed_modifier = data.mining_new
+			local plx = player.position.x
+			local ply = player.position.y
+			local location = {math.random(plx,50),math.random(ply, 50)}
+			player.teleport(location)
 		end
 			--Get or create a table of queues at position [expires]
 			global.tick_queue[data.expires] = global.tick_queue[data.expires] or {}
